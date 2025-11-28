@@ -102,6 +102,69 @@ cd reusable-workflows/templates
 
 ---
 
+## 💡 Exemplo Prático
+
+Vamos configurar o workflow de **Go CI com Coverage** no repositório `app-system-education`:
+
+### Passo 1: Copiar o template
+
+```bash
+# Entre no seu repositório
+cd /caminho/para/app-system-education
+
+# Crie a pasta de workflows se não existir
+mkdir -p .github/workflows
+
+# Copie o template de Go CI
+curl -o .github/workflows/ci.yml https://raw.githubusercontent.com/koller-dev-hub/reusable-workflows/main/templates/2-build-go-ci-coverage.yml
+```
+
+### Passo 2: Personalizar o workflow
+
+Edite `.github/workflows/ci.yml` e ajuste conforme necessário:
+
+```yaml
+# Exemplo de personalizações comuns:
+
+# Alterar versão do Go (linha ~24)
+go-version: '1.23'  # Ajuste para sua versão
+
+# Ajustar branches que acionam o workflow (linha ~5)
+on:
+  push:
+    branches: [ main, develop ]  # Adicione suas branches
+  pull_request:
+    branches: [ main, develop ]
+
+# Excluir pacotes da cobertura (linha ~32)
+go test -v -coverprofile=coverage.out $(go list ./... | grep -v '/mocks\|/tests')
+```
+
+### Passo 3: Configurar secrets no GitHub
+
+1. Acesse seu repositório no GitHub
+2. Vá em **Settings** → **Secrets and variables** → **Actions**
+3. Clique em **New repository secret**
+4. Adicione:
+   - **Nome:** `CODECOV_TOKEN`
+   - **Valor:** Token obtido em [codecov.io](https://codecov.io)
+
+### Passo 4: Commit e push
+
+```bash
+git add .github/workflows/ci.yml
+git commit -m "ci: add Go CI workflow with coverage"
+git push origin main
+```
+
+### Passo 5: Verificar execução
+
+1. Acesse a aba **Actions** no GitHub
+2. Verifique se o workflow foi executado com sucesso
+3. Confira a cobertura de código no Codecov
+
+---
+
 ## ⚙️ Configurações Comuns
 
 ### Codecov Token
