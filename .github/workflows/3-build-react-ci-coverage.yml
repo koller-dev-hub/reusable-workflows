@@ -1,0 +1,52 @@
+name: React Native CI & Codecov
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+      - 'feature/**'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Verificar linting
+        run: npm run lint --if-present
+
+      - name: Rodar testes com cobertura
+        run: |
+          npm test -- --coverage --watchAll=false --coverageReporters=lcov --coverageReporters=text
+
+      - name: Confirmar conteúdo do arquivo de cobertura
+        run: |
+          echo "=== Tamanho e preview ==="
+          ls -lh coverage/lcov.info
+          head -n 20 coverage/lcov.info
+          echo "=== Resumo ==="
+          cat coverage/coverage-summary.json || echo "Resumo não disponível"
+
+      - name: Upload cobertura para Codecov
+        uses: codecov/codecov-action@v4.5.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: coverage/lcov.info
+          flags: unittests
+          verbose: true
+          fail_ci_if_error: true
