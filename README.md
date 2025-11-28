@@ -1,6 +1,4 @@
-# reusable-workflows
-
-Repositório de templates de GitHub Actions workflows para projetos da Koller Dev Hub.
+# Repositório de templates de GitHub Actions workflows para projetos da Koller Dev Hub.
 
 ## 📋 Templates Disponíveis
 
