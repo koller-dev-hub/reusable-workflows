@@ -91,14 +91,84 @@ curl -o .github/workflows/ci.yml https://raw.githubusercontent.com/koller-dev-hu
 4. Cole e ajuste conforme necessário
 5. Configure os secrets no repositório
 
-### Opção 3: Usar como referência
+### Opção 3: Usar como Reusable Workflow
 
-Clone este repositório localmente e use os templates como referência:
+Em vez de copiar os arquivos, você pode chamar workflows deste repositório diretamente. Isso permite centralizar a manutenção e receber atualizações automaticamente.
 
-```bash
-git clone https://github.com/koller-dev-hub/reusable-workflows.git
-cd reusable-workflows/templates
+**Vantagens:**
+
+- ✅ Sem duplicação de código
+- ✅ Atualizações centralizadas
+- ✅ Mais fácil de manter
+
+**Como usar:**
+
+1. **Neste repositório (`reusable-workflows`)**, crie workflows reutilizáveis em `.github/workflows/`:
+
+```yaml
+# .github/workflows/go-ci-reusable.yml
+name: Go CI Reusable
+
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        required: false
+        type: string
+        default: '1.23'
+      exclude-packages:
+        required: false
+        type: string
+        default: '/mocks|/tests'
+    secrets:
+      CODECOV_TOKEN:
+        required: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go-version }}
+
+      - name: Run tests with coverage
+        run: |
+          go test -v -coverprofile=coverage.out $(go list ./... | grep -v '${{ inputs.exclude-packages }}')
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.out
 ```
+
+2. **No seu outro repositório**, chame o workflow reutilizável:
+
+```yaml
+# .github/workflows/ci.yml (no repositório de destino)
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  ci:
+    uses: koller-dev-hub/reusable-workflows/.github/workflows/go-ci-reusable.yml@main
+    with:
+      go-version: '1.23'
+      exclude-packages: '/mocks|/tests|/cmd'
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+```
+
+**Nota:** Esta opção requer que os workflows sejam convertidos para o formato `workflow_call`. Atualmente, os templates estão no formato de cópia direta (Opções 1 e 2).
 
 ---
 
